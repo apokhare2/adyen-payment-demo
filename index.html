@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adyen Sandbox Checkout — Aayush</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@adyen/adyen-web@6.17.0/dist/adyen.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--dark:#0b0f1a;--surface:#fff;--soft:#f9fafb;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--accent:#3b82f6;--success:#10b981;--danger:#ef4444;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+    html,body{font-family:var(--font);background:var(--dark);color:var(--text);scroll-behavior:smooth}
+    .hero-split{display:grid;grid-template-columns:1fr 460px;min-height:100vh;width:100vw}
+    .hero{background:var(--dark);display:flex;flex-direction:column;justify-content:space-between;padding:48px 56px;overflow:hidden;position:relative}
+    .hero::before{content:'';position:absolute;top:-100px;left:-100px;width:480px;height:480px;background:radial-gradient(circle,rgba(59,130,246,.13) 0%,transparent 70%);pointer-events:none}
+    .hero::after{content:'';position:absolute;bottom:-60px;right:40px;width:320px;height:320px;background:radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 70%);pointer-events:none}
+    .hero-top{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+    .hero-logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+    .hero-logo svg{width:18px;height:18px}
+    .hero-brand{font-size:14px;font-weight:600;color:rgba(255,255,255,.9)}
+    .hero-tag{margin-left:auto;font-size:11px;font-weight:500;color:rgba(255,255,255,.35);font-family:var(--mono);background:rgba(255,255,255,.05);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.08)}
+    .hero-body{position:relative;z-index:1}
+    .hero-kicker{font-size:11px;font-weight:500;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;font-family:var(--mono)}
+    .hero-headline{font-size:50px;font-weight:600;line-height:1.05;color:#fff;letter-spacing:-.03em;margin-bottom:18px}
+    .hero-headline span{color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.22)}
+    .hero-desc{font-size:15px;line-height:1.7;color:rgba(255,255,255,.48);max-width:420px}
+    .hero-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:1}
+    .hcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:18px;transition:border-color .2s,transform .2s}
+    .hcard:hover{border-color:rgba(255,255,255,.13);transform:translateY(-2px)}
+    .hcard-icon{width:30px;height:30px;border-radius:9px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .hcard-icon.blue{background:rgba(59,130,246,.18)}.hcard-icon.green{background:rgba(16,185,129,.18)}.hcard-icon.amber{background:rgba(245,158,11,.18)}.hcard-icon.purple{background:rgba(139,92,246,.18)}
+    .hcard-title{font-size:13px;font-weight:600;color:rgba(255,255,255,.88);margin-bottom:3px}
+    .hcard-sub{font-size:12px;color:rgba(255,255,255,.38);line-height:1.5}
+    .hero-footer{font-size:12px;color:rgba(255,255,255,.22);font-family:var(--mono);position:relative;z-index:1}
+    .checkout-panel{background:var(--soft);border-left:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;min-height:100vh}
+    .checkout-inner{flex:1;overflow-y:auto;padding:32px 28px 26px;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+    .checkout-header{display:flex;align-items:center;justify-content:space-between}
+    .sandbox-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--success);background:rgba(16,185,129,.1);padding:5px 10px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase}
+    .sandbox-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .adyen-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono)}
+    .checkout-title{font-size:24px;font-weight:600;color:var(--text);letter-spacing:-.02em}
+    .checkout-sub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
+    .order-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .order-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;font-size:13px}
+    .order-row+.order-row{border-top:1px solid var(--border)}
+    .order-label{color:var(--muted)}.order-value{font-weight:600;color:var(--text)}
+    .order-total{background:var(--dark);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+    .order-total .order-label{color:rgba(255,255,255,.45);font-size:13px}
+    .order-total .order-value{color:#fff;font-size:22px;font-weight:600;letter-spacing:-.02em}
+    .section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-top:2px}
+    #dropin-container{flex:1;min-height:320px}
+    .checkout-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;background:var(--surface);text-align:center}
+    .checkout-footer span{font-size:12px;color:var(--muted)}
+    .notes-launcher{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:999;min-width:320px;max-width:calc(100vw - 32px);background:rgba(11,15,26,.92);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px);border-radius:18px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 16px 50px rgba(0,0,0,.32);cursor:pointer;animation:launcherBoot .8s cubic-bezier(.22,1,.36,1);transition:transform .2s ease,border-color .2s ease,background .2s ease}
+    .notes-launcher:hover{transform:translateX(-50%) translateY(-2px);border-color:rgba(255,255,255,.16);background:rgba(19,25,41,.95)}
+    .notes-launcher-left{display:flex;align-items:center;gap:10px;min-width:0}
+    .notes-launcher-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(59,130,246,.12);animation:notesPulse 2s infinite;flex-shrink:0}
+    .notes-launcher-label{font-size:13px;color:rgba(255,255,255,.82);font-family:var(--mono);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .notes-launcher-arrow{width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.08);transition:transform .32s ease,color .2s ease,border-color .2s ease;flex-shrink:0}
+    .notes-launcher.active .notes-launcher-arrow{transform:rotate(180deg);color:#fff;border-color:rgba(255,255,255,.16)}
+    .notes-panel{max-height:0;overflow:hidden;opacity:0;transform:translateY(-10px);transition:max-height .7s cubic-bezier(.22,1,.36,1),opacity .35s ease,transform .45s ease;background:#f3f6fb}
+    .notes-panel.open{max-height:9000px;opacity:1;transform:translateY(0)}
+    .docs-section{background:#f3f6fb;padding:72px 64px 110px}
+    .docs-intro{max-width:680px;margin-bottom:48px}
+    .docs-eyebrow{font-size:11px;font-weight:500;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:10px}
+    .docs-heading{font-size:36px;font-weight:600;color:var(--text);letter-spacing:-.025em;line-height:1.15;margin-bottom:12px}
+    .docs-sub{font-size:15px;color:var(--muted);line-height:1.6}
+    .docs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+    .doc-card{background:var(--surface);border-radius:20px;border:1px solid var(--border);padding:28px;opacity:0;transform:translateY(20px);box-shadow:0 10px 24px rgba(17,24,39,.04)}
+    .notes-panel.open .doc-card{animation:cardRise .55s ease both}
+    .notes-panel.open .doc-card:nth-child(2){animation-delay:.08s}
+    .doc-card.full-width{grid-column:1/-1}
+    .doc-card-header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+    .doc-card-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .doc-card-icon.blue{background:rgba(59,130,246,.1)}.doc-card-icon.orange{background:rgba(245,158,11,.1)}
+    .doc-card-title{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+    .doc-card-sub{font-size:13px;color:var(--muted);margin-top:2px}
+    .impl-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+    .impl-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.6;color:#374151}
+    .impl-list li code{font-family:var(--mono);font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:4px;color:#1d4ed8}
+    .impl-check{width:20px;height:20px;border-radius:50%;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .impl-check svg{width:10px;height:10px}
+    .error-list{display:flex;flex-direction:column;gap:10px}
+    .error-list-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+    .err{border:1px solid var(--border);border-radius:14px;padding:16px 18px;background:var(--soft)}
+    .err-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .err-code{font-size:11px;font-weight:600;font-family:var(--mono);color:#1d4ed8;background:#dbeafe;padding:3px 9px;border-radius:20px;letter-spacing:.02em;white-space:nowrap}
+    .err-title{font-size:13px;font-weight:600;color:var(--text)}
+    .err-body{font-size:13px;line-height:1.6;color:var(--muted)}
+    .err-body strong{color:var(--text);font-weight:600}
+    .err-body code{font-family:var(--mono);font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:4px}
+    .err-body p{margin-top:6px}.err-body p:first-child{margin-top:0}
+    .err-section-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);font-family:var(--mono);margin-top:8px;margin-bottom:4px}
+    .adyen-checkout__payment-method{border-radius:14px!important;border-color:var(--border)!important;box-shadow:none!important;overflow:hidden!important}
+    .adyen-checkout__card,.adyen-checkout__card__form{display:flex!important;flex-direction:column!important}
+    .adyen-checkout__field{margin-bottom:12px!important}
+    .adyen-checkout__label__text{font-size:12px!important;font-weight:600!important;color:#374151!important;font-family:var(--font)!important}
+    .adyen-checkout__input,.adyen-checkout__card-input{font-size:14px!important;font-family:var(--font)!important}
+    .adyen-checkout__input:focus,.adyen-checkout__card-input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(59,130,246,.12)!important}
+    .adyen-checkout__card__holderName,.adyen-checkout__field--holderName{order:-10!important}
+    .adyen-checkout__button.adyen-checkout__button--pay{border-radius:12px!important;min-height:48px!important;font-weight:600!important;font-family:var(--font)!important;font-size:15px!important;background:var(--accent)!important;color:#fff!important;border:none!important;transition:opacity .15s,transform .1s!important}
+    .adyen-checkout__button.adyen-checkout__button--pay:hover{opacity:.88!important}
+    .adyen-checkout__button.adyen-checkout__button--pay:active{transform:scale(.99)!important}
+    .success-screen{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 8px 10px;gap:0;flex:1}
+    .success-screen.visible{display:flex}
+    .success-icon-wrap{width:72px;height:72px;border-radius:50%;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+    .success-icon-wrap svg{width:32px;height:32px}
+    .success-title{font-size:24px;font-weight:600;color:var(--text);letter-spacing:-.02em;margin-bottom:8px}
+    .success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px}
+    .success-order{width:100%;background:var(--soft);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px;text-align:left}
+    .success-order-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
+    .success-order-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+    .success-order-row:last-child{border-bottom:none}
+    .success-order-row span:first-child{color:var(--muted)}.success-order-row span:last-child{font-weight:600;color:var(--text)}
+    .success-order-total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--dark)}
+    .success-order-total span:first-child{color:rgba(255,255,255,.5);font-size:13px}
+    .success-order-total span:last-child{color:#fff;font-size:20px;font-weight:600;letter-spacing:-.02em}
+    .success-ref{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:24px}
+    .success-back-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:var(--font);border:none;border-radius:12px;cursor:pointer;transition:opacity .15s}
+    .success-back-btn:hover{opacity:.88}
+    .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;color:#fff;display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.25);font-size:14px;font-family:var(--font);min-width:280px;max-width:420px;z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+    .toast-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .toast-icon.error{background:rgba(239,68,68,.2)}.toast-icon svg{width:16px;height:16px}
+    .toast-body{flex:1}.toast-title{font-weight:600;font-size:14px;margin-bottom:2px}
+    .toast-msg{font-size:13px;color:rgba(255,255,255,.7);line-height:1.45}
+    .toast-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+    .toast-close:hover{color:rgba(255,255,255,.8)}
+    @keyframes launcherBoot{0%{opacity:0;transform:translateX(-50%) translateY(18px) scale(.96)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+    @keyframes notesPulse{0%,100%{opacity:1}50%{opacity:.45}}
+    @keyframes cardRise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:960px){
+      .hero-split{grid-template-columns:1fr;min-height:auto}
+      .hero{min-height:55vh;padding:36px 28px}
+      .hero-headline{font-size:36px}
+      .hero-cards{grid-template-columns:1fr 1fr}
+      .checkout-panel{border-left:none;border-top:1px solid rgba(255,255,255,.06);min-height:auto}
+      .checkout-inner{padding:28px 20px}
+      .docs-section{padding:48px 24px 120px}
+      .docs-grid{grid-template-columns:1fr}
+      .docs-heading{font-size:26px}
+      .error-list-grid{grid-template-columns:1fr}
+      .notes-launcher{width:calc(100vw - 24px);min-width:unset;bottom:14px}
+      .toast{width:calc(100vw - 24px);min-width:unset;max-width:unset;bottom:84px}
+    }
+  </style>
+</head>
+<body>
+  <div class="hero-split">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="hero-logo">
+          <svg viewBox="0 0 18 18" fill="none">
+            <rect x="2" y="2" width="6" height="6" rx="1.5" fill="white"/>
+            <rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity="0.5"/>
+            <rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity="0.5"/>
+            <rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity="0.25"/>
+          </svg>
+        </div>
+        <div class="hero-brand">Aayush's Demo</div>
+        <div class="hero-tag">sandbox &middot; v6.17</div>
+      </div>
+      <div class="hero-body">
+        <div class="hero-kicker">Adyen Integration</div>
+        <h1 class="hero-headline">Real checkout.<br><span>Real flow.</span></h1>
+        <p class="hero-desc">End-to-end Adyen Sessions API integration with Web Drop-in &mdash; built to understand merchant troubleshooting, auth flows, and payment lifecycle from first principles.</p>
+      </div>
+      <div class="hero-cards">
+        <div class="hcard"><div class="hcard-icon blue">&#128274;</div><div class="hcard-title">Sessions API</div><div class="hcard-sub">Client key frontend, API key backend</div></div>
+        <div class="hcard"><div class="hcard-icon green">&#10003;</div><div class="hcard-title">Drop-in UI</div><div class="hcard-sub">Secure card collection, no raw data</div></div>
+        <div class="hcard"><div class="hcard-icon amber">&#9881;</div><div class="hcard-title">Debug-ready</div><div class="hcard-sub">CORS, auth, roles, refusals tested</div></div>
+        <div class="hcard"><div class="hcard-icon purple">&#8635;</div><div class="hcard-title">Full lifecycle</div><div class="hcard-sub">Success, failure, error result codes</div></div>
+      </div>
+      <div class="hero-footer">localhost:3001 &middot; POST /api/sessions</div>
+    </section>
+
+    <section class="checkout-panel">
+      <div class="checkout-inner">
+        <div class="checkout-header">
+          <div class="sandbox-pill"><div class="sandbox-dot"></div>Sandbox</div>
+          <div class="adyen-label">Adyen</div>
+        </div>
+        <div>
+          <h2 class="checkout-title">Complete your payment</h2>
+          <p class="checkout-sub">Test the full payment flow with Adyen sandbox cards.</p>
+        </div>
+        <div class="order-box">
+          <div class="order-row"><span class="order-label">Product</span><span class="order-value">Demo Order</span></div>
+          <div class="order-row"><span class="order-label">Environment</span><span class="order-value">Test</span></div>
+          <div class="order-total"><span class="order-label">Total</span><span class="order-value">$10.00</span></div>
+        </div>
+        <div class="section-label">Payment method</div>
+        <div id="dropin-container"></div>
+        <div class="success-screen" id="success-screen">
+          <div class="success-icon-wrap">
+            <svg viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="16" fill="#10b981" opacity="0.15"/>
+              <path d="M9 16.5L13.5 21L23 11" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="success-title">Payment successful!</div>
+          <div class="success-sub">Your order has been confirmed.<br>A receipt has been sent to your email.</div>
+          <div class="success-order">
+            <div class="success-order-header">Order summary</div>
+            <div class="success-order-row"><span>Product</span><span>Demo Order</span></div>
+            <div class="success-order-row"><span>Environment</span><span>Sandbox &middot; Test</span></div>
+            <div class="success-order-row"><span>Status</span><span style="color:#10b981;font-weight:600;">&#10003; Authorised</span></div>
+            <div class="success-order-total"><span>Total charged</span><span>$10.00</span></div>
+          </div>
+          <div class="success-ref" id="success-ref">Ref: &mdash;</div>
+          <button class="success-back-btn" onclick="location.reload()">&#8592; Back to checkout</button>
+        </div>
+      </div>
+      <div class="checkout-footer"><span>&#128274;</span><span>Secured by Adyen &middot; PCI-DSS compliant &middot; Sandbox mode</span></div>
+    </section>
+  </div>
+
+  <div class="notes-launcher" id="notes-launcher" onclick="toggleNotesPanel()">
+    <div class="notes-launcher-left">
+      <span class="notes-launcher-dot"></span>
+      <span class="notes-launcher-label">Implementation notes &amp; logs</span>
+    </div>
+    <div class="notes-launcher-arrow">&#8595;</div>
+  </div>
+
+  <div class="notes-panel" id="notes-panel">
+    <div class="docs-section">
+      <div class="docs-intro">
+        <div class="docs-eyebrow">Implementation notes</div>
+        <h2 class="docs-heading">What was built and what broke</h2>
+        <p class="docs-sub">A concise record of every step taken, every error hit, and exactly how each one was resolved &mdash; from first API call to completed sandbox payment.</p>
+      </div>
+      <div class="docs-grid">
+
+        <!-- CARD 1 -->
+        <div class="doc-card full-width">
+          <div class="doc-card-header">
+            <div class="doc-card-icon blue">&#128230;</div>
+            <div>
+              <div class="doc-card-title">What I Implemented</div>
+              <div class="doc-card-sub">End-to-End Payment Integration (Adyen)</div>
+            </div>
+          </div>
+          <ul class="impl-list">
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Set up an Adyen sandbox environment, including merchant account configuration and API credentials, to mirror a real merchant onboarding flow.
+            </li>
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Built a Node.js backend (Express) endpoint to create Checkout Sessions via Adyen's API, handling authentication, request construction, and response parsing.
+            </li>
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Used Postman extensively to test and validate API requests before integrating them into the backend, which helped isolate issues like incorrect headers, malformed JSON, and authentication failures early in the process.
+            </li>
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Integrated Adyen Web Drop-in v6 on the frontend using the client key, implementing the full session-based checkout flow and handling payment lifecycle events (onPaymentCompleted, onError, etc.).
+            </li>
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Configured allowed origins in Adyen's Customer Area to resolve CORS issues during local development, understanding how client-side authentication ties to domain restrictions.
+            </li>
+            <li>
+              <div class="impl-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5.5L4 7.5L8 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              Successfully completed and verified the full sandbox payment lifecycle using Adyen test cards, including handling authorised, refused, and error states.
+            </li>
+          </ul>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="doc-card full-width">
+          <div class="doc-card-header">
+            <div class="doc-card-icon orange">&#128027;</div>
+            <div>
+              <div class="doc-card-title">Errors encountered &amp; fixed</div>
+              <div class="doc-card-sub">12 real issues resolved during development</div>
+            </div>
+          </div>
+          <div class="error-list error-list-grid">
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">401 Unauthorized</span><span class="err-title">API key not saved</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> Every request to the Sessions API returned a 401 immediately after credential generation. The API key was freshly created in the Adyen Customer Area but the request was still being rejected as if no key existed.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>Adyen requires you to explicitly click <strong>Save</strong> after generating an API key &mdash; generating the key alone does not persist it. The backend validates requests against the last saved credential state.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Returned to <strong>Developers &rarr; API credentials</strong>, clicked <strong>Save changes</strong>, then retried. Authenticated immediately.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Always verify Save was clicked after any credential change. This is a common gotcha during initial setup &mdash; it does not fail loudly during key generation.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">400 / 702</span><span class="err-title">Validation error &mdash; bad request body</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The Sessions API returned a <code>702</code> validation error about invalid or missing fields, even though the request body looked correct.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>In Postman, the request body was set to <strong>form-data</strong> rather than <strong>raw JSON</strong>, and the <code>Content-Type: application/json</code> header was absent, causing Adyen to misparse the payload entirely.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Switched Body to <strong>raw &rarr; JSON</strong> and added <code>Content-Type: application/json</code> explicitly. Adyen correctly parsed the payload and returned a valid session.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Always set <code>Content-Type</code> explicitly for REST APIs &mdash; many tools do not set it automatically even when the body looks like JSON.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">403 / 901</span><span class="err-title">Invalid merchant account</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The Sessions API returned a <code>901</code> error &mdash; account not found or not permitted &mdash; even though the merchant account string appeared correct in the portal.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The <code>merchantAccount</code> field was set to the <strong>company-level account</strong> (e.g. <code>AayushCo</code>) rather than a specific <strong>merchant-level ECOM account</strong>. Sessions can only be created against individual merchant accounts with a payment channel attached.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Switched to the correct ecommerce-level account: <code>UCSCAccountECOM</code>. Request succeeded.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>The Adyen account hierarchy matters: <strong>Company &rarr; Merchant &rarr; Store</strong>. Checkout API calls always use the Merchant account (ECOM suffix), not the company-level root.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">403 / 010</span><span class="err-title">Not allowed &mdash; raw card submission blocked</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> Attempting to submit raw card details directly via the Payments API returned a <code>010</code> error: <em>Not allowed</em>.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>Raw card data submission is blocked by <strong>PCI-DSS scope restrictions</strong>. This endpoint requires <strong>PCI DSS SAQ D</strong> compliance. Adyen prevents merchants from handling raw PANs unless they have formally obtained the right compliance tier.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Pivoted to the <strong>Adyen Web Drop-in with Sessions flow</strong>. Drop-in handles card collection inside Adyen-hosted iframes &mdash; raw card data never touches my code or server (SAQ A compliant).</p>
+                <div class="err-section-label">Lesson</div>
+                <p>For most integrations, Drop-in or Components are the correct path. Raw card APIs require a higher PCI level that most merchants do not have.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">CORS</span><span class="err-title">Allowed origins not configured</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> Drop-in failed to initialize &mdash; the browser console showed a CORS error when the SDK tried to fetch payment methods. The checkout container stayed blank.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>Adyen's client-side SDK makes requests from the browser using the <strong>client key</strong>, which has an <strong>allowed origins</strong> allowlist. Since <code>http://localhost:3001</code> was not on the list, every browser request was rejected with a CORS preflight failure.</p>
+                <div class="err-section-label">Fix</div>
+                <p>In <strong>Customer Area &rarr; Developers &rarr; API credentials &rarr; Client-side authentication</strong>, added <code>http://localhost:3001</code> and <code>http://127.0.0.1:3001</code> to the allowed origins list. Waited ~1&ndash;2 minutes for propagation.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>CORS errors from Adyen's SDK are almost always an origins misconfiguration. The fix is always in the Customer Area &mdash; not in the app code.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">JS Error</span><span class="err-title">AdyenCheckout is not defined</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The browser threw <code>ReferenceError: AdyenCheckout is not defined</code> when the initialization code ran. Drop-in never appeared.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The original code used the Adyen Web v5 loading pattern, accessing <code>window.AdyenCheckout</code> as a global. In <strong>v6</strong>, Adyen moved to an <strong>ES Module (ESM)</strong> architecture &mdash; there is no global anymore. The SDK must be imported with named imports inside a <code>type="module"</code> script tag.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Updated to <code>&lt;script type="module"&gt;</code> and switched to the correct named ESM import from the CDN.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>v5 &rarr; v6 is a breaking change in how Adyen Web is loaded. Always check the SDK version against the loading pattern in use.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">NETWORK_ERROR</span><span class="err-title">Invalid client key &mdash; frontend auth failure</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The checkout UI failed to render and the payment methods section remained blank. The browser console showed a CORS-style error along with a <code>NETWORK_ERROR</code> during session setup, even though the backend was running correctly.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The frontend was initialized with an invalid Adyen client key, causing Adyen's session setup request to fail. The browser reported it as a CORS or network error, but the actual issue was a <strong>frontend authentication misconfiguration</strong> &mdash; the SDK was rejected before reaching the payment methods step.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Replaced the incorrect client key with the valid Adyen test client key from the Customer Area. Refreshed and confirmed the Drop-in loaded successfully.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Browser errors like CORS or <code>Failed to fetch</code> can be misleading. When the Drop-in container is blank and the console shows a <code>NETWORK_ERROR</code>, always check the client key and allowed origins before investigating backend connectivity.</p>
+              </div>
+            </div>
+
+            <div class="err">
+              <div class="err-top"><span class="err-code">Failed to fetch</span><span class="err-title">Backend not running &mdash; session endpoint unavailable</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The checkout page loaded, but the payment flow could not initialize because the frontend could not reach the session creation endpoint. A toast appeared: "Could not load checkout. Make sure your backend is running on port 3001."</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The frontend <code>fetch</code> call was pointed at <code>http://localhost:9999/api/sessions</code> &mdash; a port with no running service &mdash; causing an immediate <code>ERR_CONNECTION_REFUSED</code>. This simulated a backend service being unavailable or misconfigured.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Restored the correct backend URL to <code>http://localhost:3001/api/sessions</code> and confirmed the Node.js backend was running. Session creation succeeded and the Drop-in rendered normally.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Before debugging SDK behavior or frontend logic, first confirm the backend session endpoint is reachable. Many checkout failures start with a missing backend dependency &mdash; the <code>catch</code> block should surface this clearly rather than showing a generic error.</p>
+              </div>
+            </div>
+
+            <!-- ERROR 9 -->
+            <div class="err">
+              <div class="err-top"><span class="err-code">400 / Validation</span><span class="err-title">Invalid payload &mdash; type mismatch in session request</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The backend was running and reachable, but the frontend failed to initialize with a toast showing "Could not load checkout." The backend terminal logged an Adyen 400 response with a validation error about the amount.value field.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The amount.value field in the session request body was sent as a string ("1000") instead of a number (1000). Adyen enforces strict schema types &mdash; a string where a number is expected causes the entire session creation to fail with a 400 validation error. The frontend originally mislabelled this as a client key / CORS issue because NETWORK_ERROR was being matched too broadly in the catch block.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Corrected the backend payload back to value: 1000 (integer). Also updated the frontend catch block to distinguish 400/422 session failures from frontend config errors, so the toast now correctly reads: "The session request payload was rejected. Check backend request fields and types."</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Adyen's API is strictly typed &mdash; always send amount.value as an integer (minor units), not a string. When debugging checkout failures, check backend terminal logs first: a 400 from Adyen with a validation message pinpoints the exact field, whereas the frontend toast alone is often misleading.</p>
+              </div>
+            </div>
+
+            <!-- ERROR 10 -->
+            <div class="err">
+              <div class="err-top"><span class="err-code">403 / 901</span><span class="err-title">Missing required field &mdash; merchantAccount omitted</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The checkout page loaded, but payment methods failed to initialize and the frontend displayed "Could not load checkout. Please review console logs and configuration." The backend was still running correctly, and the terminal showed Adyen returning a 403 response with error code 901 and the message Invalid Merchant Account.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The merchantAccount field was intentionally removed from the backend session request body to simulate a missing required field. Adyen could not associate the request with a valid merchant account, so it rejected it as a security and configuration error rather than a generic validation error.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Restored the missing field in the session request body: merchantAccount: ADYEN_MERCHANT_ACCOUNT. Restarted the backend and refreshed the frontend, which allowed session creation to succeed again.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Required fields do not always fail with generic validation errors. In Adyen's case, omitting merchantAccount results in a merchant account security error (403 / 901). When debugging integrations, backend response codes and messages are much more reliable than frontend toasts for identifying the true cause.</p>
+              </div>
+            </div>
+
+            <!-- ERROR 11 -->
+            <div class="err">
+              <div class="err-top"><span class="err-code">IMPLEMENTATION_ERROR</span><span class="err-title">Environment mismatch &mdash; test client key used against live environment</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> The checkout page loaded, but payment methods failed to initialize. The frontend displayed "Checkout failed to initialize. Possible frontend configuration issue: verify your Adyen client key and allowed origin." In the browser console, Adyen returned a more specific error: IMPLEMENTATION_ERROR: you are using a test clientKey against the live environment.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The frontend was intentionally configured with environment: "live" while still using a test client key and a backend generating test sessions. This created a mismatch between the environment and credentials used in the integration. Adyen enforces strict consistency across environment, client key, and session configuration, and rejected the initialization immediately.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Restored the frontend configuration to match the backend and client key: environment: "test". After refreshing the page, checkout initialized successfully and payment methods rendered as expected.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Adyen requires strict alignment between environment, client key, and backend session configuration. Mixing test and live settings will cause immediate initialization failures. When debugging these issues, browser console errors often provide more precise insight than generic frontend messages, which may misclassify the problem.</p>
+              </div>
+            </div>
+
+            <!-- ERROR 12 -->
+            <div class="err">
+              <div class="err-top"><span class="err-code">UX / Duplicate</span><span class="err-title">Duplicate submission &mdash; Pay button not disabled after first click</span></div>
+              <div class="err-body">
+                <p><strong>What happened:</strong> Nothing visually prevented a user from clicking the Pay button multiple times before the payment completed. In a real product this risks duplicate charges being submitted against the same session. A first fix using dropin.setStatus("loading") caused the UI to get permanently stuck in a loading state, blocking the payment flow entirely.</p>
+                <div class="err-section-label">Root cause</div>
+                <p>The Drop-in was initialized without any duplicate submission guard. The first attempt used dropin.setStatus("loading") inside onSubmit, but this interfered with Adyen's internal submission lifecycle — the UI locked but the payment could never complete or recover.</p>
+                <div class="err-section-label">Fix</div>
+                <p>Replaced the setStatus approach with a simple boolean flag: let paymentInProgress = false. On the first click onSubmit sets it to true and shows a processing toast. Any subsequent click while the flag is true shows "Payment already in progress" and returns early without touching the Drop-in state. The flag is reset to false in onPaymentCompleted, onPaymentFailed, and onError so the flow can recover cleanly from any outcome.</p>
+                <div class="err-section-label">Lesson</div>
+                <p>Let Adyen manage its own UI state — do not force setStatus inside onSubmit unless you fully control the rest of the lifecycle. A lightweight flag is the safer pattern for duplicate prevention: it protects against repeat clicks without interfering with how the Drop-in processes and completes the payment.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="toast-icon error">
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="#ef4444" stroke-width="1.5"/>
+        <path d="M8 4.5V8.5M8 11h.01" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="toast-body">
+      <div class="toast-title" id="toast-title">Payment declined</div>
+      <div class="toast-msg" id="toast-msg">Please check your card details and try again.</div>
+    </div>
+    <button class="toast-close" onclick="hideToast()">&#215;</button>
+  </div>
+
+  <script type="module">
+    import { AdyenCheckout, Dropin, Card } from "https://cdn.jsdelivr.net/npm/@adyen/adyen-web@6.17.0/+esm";
+    let toastTimer;
+    window.hideToast = function() { document.getElementById('toast').classList.remove('show'); };
+    function showToast(title, msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-msg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() { t.classList.remove('show'); }, 5000);
+    }
+    window.toggleNotesPanel = function() {
+      const panel = document.getElementById('notes-panel');
+      const launcher = document.getElementById('notes-launcher');
+      if (panel.classList.contains('open')) {
+        panel.classList.remove('open'); launcher.classList.remove('active');
+      } else {
+        panel.classList.add('open'); launcher.classList.add('active');
+        setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+      }
+    };
+    const failMessages = {
+      Authorised: 'Payment completed successfully.',
+      Refused: 'Your card was declined. Please try a different card.',
+      Error: 'Something went wrong on our end. Please try again.',
+      Cancelled: 'Payment was cancelled.',
+      Pending: 'Payment is pending.',
+      Received: 'Payment was received and is being processed.',
+      PresentToShopper: 'Additional shopper action is required.',
+      InvalidCard: 'Card details are invalid. Please double-check.',
+      Blocked: 'This card has been blocked. Contact your bank.',
+    };
+    function friendlyError(rc) { return failMessages[rc] || 'Payment could not be completed. Please try again.'; }
+    function showSuccess(ref) {
+      document.getElementById('dropin-container').style.display = 'none';
+      document.querySelector('.section-label').style.display = 'none';
+      document.getElementById('success-screen').classList.add('visible');
+      if (ref) { document.getElementById('success-ref').textContent = 'Ref: ' + ref; }
+    }
+    function forceHolderNameToTop() {
+      const root = document.querySelector('.adyen-checkout__card') || document.querySelector('.adyen-checkout__card__form');
+      const holder = document.querySelector('.adyen-checkout__card__holderName') || document.querySelector('.adyen-checkout__field--holderName');
+      const num = document.querySelector('.adyen-checkout__card__cardNumber') || document.querySelector('.adyen-checkout__field--encryptedCardNumber');
+      if (root && holder && num && holder !== num) { try { root.insertBefore(holder, num); } catch(e) {} }
+    }
+    function watchHolder() {
+      const c = document.getElementById('dropin-container');
+      if (!c) { return; }
+      forceHolderNameToTop();
+      const obs = new MutationObserver(forceHolderNameToTop);
+      obs.observe(c, { childList: true, subtree: true });
+      setTimeout(function() { forceHolderNameToTop(); obs.disconnect(); }, 5000);
+    }
+    let paymentInProgress = false;
+
+    async function startCheckout() {
+      try {
+        const res = await fetch("http://localhost:3001/api/sessions", { method: "POST", headers: { "Content-Type": "application/json" } });
+        if (!res.ok) { throw new Error("Session request failed: " + res.status); }
+        const data = await res.json();
+        const checkout = await AdyenCheckout({
+          environment: "test",
+          clientKey: "test_VTBOOEXMSRHNRHUOFLXA3VIIL4DU3Z66",
+          countryCode: "US",
+          session: { id: data.id, sessionData: data.sessionData },
+          onPaymentCompleted: function(r) {
+            paymentInProgress = false;
+            console.log("Payment completed:", r);
+            if (r.resultCode === 'Authorised') { showSuccess(r.pspReference); }
+            else { showToast('Payment not authorised', friendlyError(r.resultCode)); }
+          },
+          onPaymentFailed: function(r) {
+            paymentInProgress = false;
+            console.error("Payment failed:", r);
+            showToast('Payment declined', friendlyError(r.resultCode));
+          },
+          onError: function(e) {
+            paymentInProgress = false;
+            console.error("Checkout error:", e);
+            showToast('Something went wrong', 'Please refresh and try again.');
+          }
+        });
+        const dropin = new Dropin(checkout, {
+          paymentMethodComponents: [Card],
+          paymentMethodsConfiguration: { card: { hasHolderName: true, holderNameRequired: true, holderNamePosition: 'top', billingAddressRequired: false, enableStoreDetails: false } },
+          onSubmit: function(state, dropin) {
+            if (paymentInProgress) {
+              showToast("Payment already in progress", "Please wait while we complete your transaction.");
+              return;
+            }
+            paymentInProgress = true;
+            console.log("Payment submitted:", state);
+            showToast("Processing payment", "Please wait while we complete your transaction.");
+          }
+        });
+        dropin.mount("#dropin-container");
+        watchHolder();
+      } catch (err) {
+        console.error(err);
+        const msg = String(err);
+        if (msg.includes("clientKey") || msg.includes("setup?clientKey")) {
+          // Frontend config issue — invalid client key or missing allowed origin
+          showToast("Checkout failed to initialize", "Possible frontend configuration issue: verify your Adyen client key and allowed origin.");
+        } else if (msg.includes("Failed to fetch") || msg.includes("ERR_CONNECTION_REFUSED")) {
+          // Backend unreachable — server not running
+          showToast("Could not load checkout", "Make sure your backend is running on port 3001.");
+        } else if (msg.includes("Session request failed: 400") || msg.includes("Session request failed: 422")) {
+          // Backend reachable but sent a bad payload — Adyen rejected it
+          showToast("Invalid backend request", "The session request payload was rejected. Check backend request fields and types.");
+        } else {
+          // Generic fallback
+          showToast("Could not load checkout", "Please review console logs and configuration.");
+        }
+      }
+    }
+    startCheckout();
+  </script>
+</body>
+</html>
