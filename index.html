@@ -523,7 +523,10 @@
 
     async function startCheckout() {
       try {
-        const res = await fetch("http://localhost:3001/api/sessions", { method: "POST", headers: { "Content-Type": "application/json" } });
+        const res = await fetch("https://adyen-payment-backend.onrender.com/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+          });
         if (!res.ok) { throw new Error("Session request failed: " + res.status); }
         const data = await res.json();
         const checkout = await AdyenCheckout({
